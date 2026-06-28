@@ -135,11 +135,17 @@ def api_delete(table: str, query: str):
 
 
 def push_webhook(url: str, content: str) -> bool:
-    """推送消息到企微群机器人"""
+    """推送消息到企微群机器人（含@所有人）"""
     if not url:
         return False
     try:
-        payload = {"msgtype": "text", "text": {"content": content}}
+        payload = {
+            "msgtype": "text",
+            "text": {
+                "content": content,
+                "mentioned_list": ["@all"],
+            },
+        }
         r = requests.post(url, json=payload, timeout=8)
         if r.status_code == 200:
             return True
