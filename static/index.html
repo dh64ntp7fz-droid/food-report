@@ -32,12 +32,8 @@ body {
 .toolbar select {
   flex: 1; padding: 8px 10px; border: 1.5px solid #E0D5CC;
   border-radius: 8px; font-size: 14px; outline: none;
-}
-.toolbar .slot-label {
-  font-size: 14px; font-weight: 600; color: #E65C1E;
-  padding: 8px 12px; background: #FFF5F0; border-radius: 8px;
-}
-.container { max-width: 500px; margin: 0 auto; padding: 0 16px 80px; }
+ }
+ .container { max-width: 500px; margin: 0 auto; padding: 0 16px 80px; }
 .card {
   background: #fff; border-radius: 12px; padding: 14px 16px;
   margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
@@ -99,7 +95,6 @@ body {
   <select id="storeSelect" onchange="loadMenu()">
     <option value="">— 请选择门店 —</option>
   </select>
-  <span class="slot-label" id="slotLabel">早10:00</span>
 </div>
 
 <div class="container" id="menuContainer" style="display:none"></div>
@@ -115,10 +110,10 @@ let stores = [];
 let menuItems = [];
 
 async function init() {
-  // 自动判断时段
+  // 自动判断时段（不显示给用户）
   const h = new Date().getHours();
   const slot = h < 13 ? '早10:00' : '晚17:00';
-  document.getElementById('slotLabel').textContent = slot;
+  window._currentSlot = slot;
 
   try {
     const r = await fetch('/api/stores');
@@ -191,7 +186,7 @@ async function submitAll() {
   btn.textContent = '提交中...';
 
   const storeId = parseInt(document.getElementById('storeSelect').value);
-  const slotLabel = document.getElementById('slotLabel').textContent;
+  const slotLabel = window._currentSlot || '早10:00';
   const items = [];
 
   menuItems.forEach((item, idx) => {
