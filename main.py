@@ -158,16 +158,12 @@ def push_webhook(url: str, content: str) -> bool:
 
 def build_report_text(store_name: str, slot_label: str, items: list) -> str:
     """生成标准上报文案"""
-    lines = [f"━━━ 湘阁里辣 · 急推菜品 ━━━"]
-    lines.append(f"🏪 {store_name}  {slot_label}")
+    lines = [f"【湘阁里辣 · 急推菜品】{store_name} {slot_label}"]
     lines.append(f"")
-    lines.append(f"📋 今日急推：")
     for item in items:
-        lines.append(f"  • {item['name']}：{item['value']}份")
-    lines.append(f"")
-    lines.append(f"━━━━━━━━━━━━━━━━")
+        lines.append(f"{item['name']}：{item['value']}份")
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
-    lines.append(f"🕐 {now}")
+    lines.append(f"上报时间：{now}")
     return "\n".join(lines)
 
 
