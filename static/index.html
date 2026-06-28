@@ -203,43 +203,34 @@ async function submitAll() {
     return;
   }
 
-  // 逐个提交
-  let success = 0, failed = 0;
-  for (const item of items) {
-    try {
-      const r = await fetch('/api/report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ store_id: storeId, slot_label: slotLabel, items: [item] }),
-      });
-      const result = await r.json();
-      if (r.ok && result.success) {
-        success++;
-        // 显示最终消息文案
-        document.getElementById('resultBox')?.remove();
-        const box = document.createElement('div');
-        box.className = 'result-box';
-        box.id = 'resultBox';
-        box.textContent = result.raw_text;
-        document.getElementById('menuContainer').after(box);
-        box.style.display = 'block';
-      } else {
-        failed++;
-      }
-    } catch(e) {
-      failed++;
-    }
-  }
-
-  if (failed === 0) {
-    showToast(`✅ 已提交 ${success} 项`, 'success');
-    // 重置
-    menuItems.forEach((_, idx) => {
-      document.getElementById(`val-${idx}`).value = 0;
+  // 一次性提交所有菜品
+  try {
+    const r = await fetch('/api/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ store_id: storeId, slot_label: slotLabel, items }),
     });
-    updateCount();
-  } else {
-    showToast(`⚠️ 成功 ${success} 项，失败 ${failed} 项`, 'warning');
+    const result = await r.json();
+    if (r.ok && result.success) {
+      // 显示消息文案
+      document.getElementById('resultBox')?.remove();
+      const box = document.createElement('div');
+      box.className = 'result-box';
+      box.id = 'resultBox';
+      box.textContent = result.raw_text;
+      document.getElementById('menuContainer').after(box);
+      box.style.display = 'block';
+      showToast('✅ 已提交并发送到群', 'success');
+      // 重置
+      menuItems.forEach((_, idx) => {
+        document.getElementById(`val-${idx}`).value = 0;
+      });
+      updateCount();
+    } else {
+      showToast('❌ ' + (result.detail || '提交失败'), 'error');
+    }
+  } catch(e) {
+    showToast('❌ 网络错误', 'error');
   }
   btn.disabled = false; btn.textContent = '提交';
 }
