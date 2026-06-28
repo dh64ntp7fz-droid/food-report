@@ -6,7 +6,8 @@ import os
 import json
 import asyncio
 import logging
-from datetime import datetime, date, time
+import time
+from datetime import datetime, date, time as dtime
 from typing import Optional
 
 import requests
@@ -33,6 +34,24 @@ HEADERS = {
 
 # 环境判断
 IS_RENDER = os.environ.get("RENDER", False)
+
+# ─── 缓存 ───
+cache = {}
+CACHE_TTL = 60  # 秒
+
+def get_cached(key: str, fetch_fn):
+    now = time.time()
+    if key in cache and now - cache[key]["ts"] < CACHE_TTL:
+        return cache[key]["data"]
+    data = fetch_fn()
+    cache[key] = {"data": data, "ts": now}
+    return data
+
+def invalidate_cache(key: str = None):
+    if key:
+        cache.pop(key, None)
+    else:
+        cache.clear()
 
 app = FastAPI(title="湘阁里辣 · 新鲜食材菜品推荐系统")
 
@@ -148,6 +167,9 @@ def get_en_slot_from_label(label: str) -> str:
 @app.get("/api/stores")
 def list_stores():
     """获取门店列表（附带菜品数量）"""
+    return get_cached("stores", lambda: _fetch_stores())
+
+def _fetch_stores():
     stores = api_get("food_stores", {"order": "sort_order.asc"})
     # 一次性获取所有菜品，按store_id分组（避免N+1查询）
     all_items = api_get("food_menu_items", {"order": "sort_order.asc"})
@@ -320,13 +342,13 @@ def add_menu_item(data: dict):
         "limit": 1,
     })
     next_order = (items[0]["sort_order"] + 1) if items else 1
-
     result = api_post("food_menu_items", {
         "store_id": store_id,
         "name": name,
         "unit": unit,
         "sort_order": next_order,
     })
+    invalidate_cache("stores")
     return result[0]
 
 
