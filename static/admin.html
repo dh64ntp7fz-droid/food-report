@@ -122,11 +122,11 @@ input:focus { border-color: #E65C1E; }
     <div class="card">
       <h3>菜品管理</h3>
       <div style="margin-bottom:12px">
-        <select id="menuStoreFilter" onchange="renderMenuAdmin(parseInt(this.value))">
-          <option value="">请选择门店 · 管理推荐菜品库</option>
+        <select id="menuStoreFilter" disabled onchange="renderMenuAdmin(parseInt(this.value))">
+          <option value="">⏳ 正在加载门店...</option>
         </select>
       </div>
-      <div id="menuAdmin"><p style="color:#999;padding:16px">请先选择门店</p></div>
+      <div id="menuAdmin"><p style="color:#999;padding:16px" id="menuLoading">⏳ 加载中...</p></div>
     </div>
   </div>
 
@@ -145,7 +145,7 @@ input:focus { border-color: #E65C1E; }
     <div class="card">
       <h3>上报记录查询</h3>
       <div class="filter-row">
-        <select id="filterStore"><option value="">所有门店</option></select>
+        <select id="filterStore" disabled><option value="">⏳ 加载中...</option></select>
         <input type="date" id="filterDate">
         <button class="btn btn-primary" onclick="loadHistory()">查询</button>
       </div>
@@ -190,8 +190,11 @@ async function loadStores() {
   const r = await fetch('/api/stores');
   stores = await r.json();
   stores.forEach(s => { menuItems[s.id] = s.menu_items || []; });
+  // 移移除加载提示并启用下拉框
+  document.getElementById('menuLoading')?.remove();
   // 填充门店筛选下拉（保留"所有门店"选项）
   const filterSel = document.getElementById('filterStore');
+  filterSel.disabled = false;
   filterSel.innerHTML = '<option value="">所有门店</option>';
   stores.forEach(s => {
     const opt = document.createElement('option');
@@ -200,6 +203,7 @@ async function loadStores() {
   // 菜品管理门店下拉
   const menuSel = document.getElementById('menuStoreFilter');
   if (menuSel) {
+    menuSel.disabled = false;
     menuSel.innerHTML = '<option value="">请选择门店 · 管理推荐菜品库</option>';
     stores.forEach(s => {
       const opt = document.createElement('option');
