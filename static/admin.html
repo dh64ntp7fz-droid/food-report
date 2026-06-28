@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>食材上报 - 后台管理</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
+  background: #FFF5F0;
+  color: #333;
+}
+.header {
+  background: linear-gradient(135deg, #E65C1E, #D45500);
+  color: #fff;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.header h1 { font-size: 16px; }
+.header .nav a { color: #fff; text-decoration: none; font-size: 13px; opacity: 0.85; margin-left: 12px; }
+.header .nav a:hover { opacity: 1; }
+.container { max-width: 800px; margin: 0 auto; padding: 16px; }
+.tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+.tab {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  background: #fff;
+  border: 1.5px solid #E0D5CC;
+  border-radius: 8px 8px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  color: #666;
+}
+.tab.active { background: #E65C1E; color: #fff; border-color: #E65C1E; }
+.panel { display: none; }
+.panel.active { display: block; }
+.card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.card h3 { font-size: 15px; margin-bottom: 12px; color: #D45500; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 8px 6px; border-bottom: 2px solid #F0E8E0; color: #666; font-weight: 600; }
+td { padding: 8px 6px; border-bottom: 1px solid #F5EDE8; vertical-align: middle; }
+input[type="text"], input[type="number"], select {
+  padding: 6px 8px;
+  border: 1.5px solid #E0D5CC;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+}
+input:focus { border-color: #E65C1E; }
+.btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-primary { background: #E65C1E; color: #fff; }
+.btn-primary:hover { background: #D45500; }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+.btn-danger { background: #E53935; color: #fff; }
+.btn-danger:hover { background: #C62828; }
+.btn-outline { background: transparent; border: 1.5px solid #E65C1E; color: #E65C1E; }
+.btn-outline:hover { background: #FFF5F0; }
+.form-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.form-row .flex { flex: 1; }
+.webhook-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #F5EDE8; }
+.webhook-item:last-child { border-bottom: none; }
+.webhook-item .store-name { width: 120px; font-weight: 500; flex-shrink: 0; }
+.webhook-item input { flex: 1; }
+.filter-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.filter-row select, .filter-row input { width: auto; min-width: 120px; }
+.report-item {
+  padding: 8px;
+  border-bottom: 1px solid #f0e8e0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.report-item:last-child { border-bottom: none; }
+.report-item .meta { color: #999; font-size: 11px; }
+.report-item .raw { background: #f8f5f0; padding: 6px 8px; border-radius: 4px; margin-top: 4px; white-space: pre-wrap; font-family: monospace; font-size: 11px; }
+.toast {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+  padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 500;
+  z-index: 999; display: none; max-width: 90%; text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.toast.success { background: #43A047; color: #fff; }
+.toast.error { background: #E53935; color: #fff; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>⚙️ 食材上报 · 后台管理</h1>
+  <div class="nav">
+    <a href="/">← 返回上报页</a>
+  </div>
+</div>
+<div class="container">
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('menu')">📋 菜品管理</div>
+    <div class="tab" onclick="switchTab('webhook')">🔗 Webhook</div>
+    <div class="tab" onclick="switchTab('history')">📊 历史记录</div>
+    <div class="tab" onclick="switchTab('alert')">🔔 告警设置</div>
+  </div>
+
+  <!-- 菜品管理 -->
+  <div class="panel active" id="panel-menu">
+    <div class="card">
+      <h3>各门店菜品</h3>
+      <div id="menuAdmin"></div>
+    </div>
+  </div>
+
+  <!-- Webhook 配置 -->
+  <div class="panel" id="panel-webhook">
+    <div class="card">
+      <h3>微信群机器人 Webhook</h3>
+      <p style="font-size:12px;color:#999;margin-bottom:12px">每店一个 Webhook URL，提交上报后自动推送到对应门店群。</p>
+      <div id="webhookList"></div>
+      <button class="btn btn-primary" onclick="saveWebhooks()" style="margin-top:12px">💾 保存全部</button>
+    </div>
+  </div>
+
+  <!-- 历史记录 -->
+  <div class="panel" id="panel-history">
+    <div class="card">
+      <h3>上报记录查询</h3>
+      <div class="filter-row">
+        <select id="filterStore"><option value="">所有门店</option></select>
+        <input type="date" id="filterDate">
+        <button class="btn btn-primary" onclick="loadHistory()">查询</button>
+      </div>
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+  <!-- 告警设置 -->
+  <div class="panel" id="panel-alert">
+    <div class="card">
+      <h3>漏报提醒配置</h3>
+      <p style="font-size:12px;color:#999;margin-bottom:12px">到点未提交时，推送到此 Webhook（建议用个人通知助手）。</p>
+      <div class="form-row">
+        <div class="flex">
+          <input type="text" id="alertWebhookUrl" placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=..." style="width:100%">
+        </div>
+        <button class="btn btn-primary" onclick="saveAlertConfig()">保存</button>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:#999">
+        默认：<code>https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=d35ec9fd-b3e2-4132-848c-0fbc7ab38107</code>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let stores = [];
+let menuItems = {};
+
+async function init() {
+  await loadStores();
+  renderMenuAdmin();
+  renderWebhooks();
+  loadHistory();
+  loadAlertConfig();
+}
+init();
+
+async function loadStores() {
+  const r = await fetch('/api/stores');
+  stores = await r.json();
+  stores.forEach(s => { menuItems[s.id] = s.menu_items || []; });
+  // 填充门店下拉
+  const sel = document.getElementById('filterStore');
+  stores.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id; opt.textContent = s.name; sel.appendChild(opt);
+  });
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.tab[onclick*='${name}']`).classList.add('active');
+  document.getElementById(`panel-${name}`).classList.add('active');
+}
+
+// ═══ 菜品管理 ═══
+function renderMenuAdmin() {
+  const container = document.getElementById('menuAdmin');
+  let html = '';
+  stores.forEach(s => {
+    const items = menuItems[s.id] || [];
+    html += `<div style="margin-bottom:16px">`;
+    html += `<h4 style="font-size:14px;margin-bottom:6px;color:#333">${s.name}</h4>`;
+    html += `<table><tr><th style="width:50%">菜品</th><th style="width:30%">单位</th><th style="width:20%">操作</th></tr>`;
+    items.forEach((item, idx) => {
+      html += `<tr>
+        <td><input type="text" value="${escHtml(item.name)}" id="mn_${s.id}_${item.id}_name" style="width:95%"></td>
+        <td><input type="text" value="${escHtml(item.unit)}" id="mn_${s.id}_${item.id}_unit" style="width:80px"></td>
+        <td>
+          <button class="btn btn-sm btn-primary" onclick="saveMenuItem(${s.id},${item.id})">保存</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteMenuItem(${s.id},${item.id})">删除</button>
+        </td>
+      </tr>`;
+    });
+    html += `</table>`;
+    html += `<div class="form-row" style="margin-top:8px">
+      <input type="text" id="newName_${s.id}" placeholder="菜品名" style="width:200px">
+      <input type="text" id="newUnit_${s.id}" placeholder="单位" style="width:80px">
+      <button class="btn btn-sm btn-outline" onclick="addMenuItem(${s.id})">+ 新增</button>
+    </div>`;
+    html += `</div>`;
+  });
+  container.innerHTML = html;
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+async function saveMenuItem(storeId, itemId) {
+  const name = document.getElementById(`mn_${storeId}_${itemId}_name`).value.trim();
+  const unit = document.getElementById(`mn_${storeId}_${itemId}_unit`).value.trim();
+  if (!name || !unit) { showToast('菜品名和单位不能为空', 'error'); return; }
+  const r = await fetch(`/api/menu/${itemId}`, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({name, unit})
+  });
+  if (r.ok) { showToast('✅ 已保存', 'success'); await loadStores(); renderMenuAdmin(); }
+  else showToast('❌ 保存失败', 'error');
+}
+
+async function deleteMenuItem(storeId, itemId) {
+  if (!confirm('确认删除该菜品？')) return;
+  const r = await fetch(`/api/menu/${itemId}`, { method: 'DELETE' });
+  if (r.ok) { showToast('✅ 已删除', 'success'); await loadStores(); renderMenuAdmin(); }
+  else showToast('❌ 删除失败', 'error');
+}
+
+async function addMenuItem(storeId) {
+  const name = document.getElementById(`newName_${storeId}`).value.trim();
+  const unit = document.getElementById(`newUnit_${storeId}`).value.trim();
+  if (!name || !unit) { showToast('请输入菜品名和单位', 'error'); return; }
+  const r = await fetch('/api/menu', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({store_id: storeId, name, unit})
+  });
+  if (r.ok) {
+    showToast('✅ 已添加', 'success');
+    document.getElementById(`newName_${storeId}`).value = '';
+    document.getElementById(`newUnit_${storeId}`).value = '';
+    await loadStores(); renderMenuAdmin();
+  } else showToast('❌ 添加失败', 'error');
+}
+
+// ═══ Webhook ═══
+async function renderWebhooks() {
+  const r = await fetch('/api/webhook-config');
+  const configs = await r.json();
+  const container = document.getElementById('webhookList');
+  let html = '';
+  configs.forEach(cfg => {
+    const store = stores.find(s => s.id === cfg.store_id);
+    html += `<div class="webhook-item">
+      <span class="store-name">${store ? store.name : '?'}</span>
+      <input type="text" value="${escHtml(cfg.webhook_url || '')}" id="wh_${cfg.store_id}" placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=...">
+    </div>`;
+  });
+  // 提供一键填充按钮
+  html += `<div style="margin-top:8px;font-size:12px;color:#999">
+    <button class="btn btn-sm btn-outline" onclick="fillDefaultWebhooks()">📥 一键填入各店 Webhook</button>
+  </div>`;
+  container.innerHTML = html;
+}
+
+async function fillDefaultWebhooks() {
+  // 各店已确认的 Webhook URL
+  const defaults = {
+    // 用门店ID动态填充，这里从 stores 列表中找名字匹配
+  };
+  // 已知的5个Webhook，按门店名匹配
+  const whMap = {
+    '大朗环球店': 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=cbac48c7-efed-4d47-9a9f-51cd6bb52d5f',
+    '凤岗黄河店': 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=7abf8ef0-d06f-411a-adff-48c35d92c2c3',
+    '凤岗天安数码城店': 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=2c774eee-2386-49d6-be4a-aac269209dd6',
+    '长安锦厦店': 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=397b64a5-7107-41d5-a6d1-e95b797e76e1',
+    '长安花园店': 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=1e08dacd-61cb-487d-91e6-63e5abb969a3',
+  };
+  stores.forEach(s => {
+    const url = whMap[s.name];
+    if (url) {
+      const input = document.getElementById(`wh_${s.id}`);
+      if (input) input.value = url;
+    }
+  });
+  showToast('已填入各店 Webhook，点击保存生效', 'success');
+}
+
+async function saveWebhooks() {
+  for (const s of stores) {
+    const input = document.getElementById(`wh_${s.id}`);
+    if (!input) continue;
+    const url = input.value.trim();
+    await fetch('/api/webhook-config', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({store_id: s.id, webhook_url: url})
+    });
+  }
+  showToast('✅ 全部 Webhook 已保存', 'success');
+}
+
+// ═══ 历史记录 ═══
+async function loadHistory() {
+  const storeId = document.getElementById('filterStore').value;
+  const date = document.getElementById('filterDate').value;
+  let url = '/api/reports?limit=100';
+  if (storeId) url += `&store_id=${storeId}`;
+  if (date) url += `&date=${date}`;
+  try {
+    const r = await fetch(url);
+    const reports = await r.json();
+    const container = document.getElementById('historyList');
+    if (!reports.length) {
+      container.innerHTML = '<div style="color:#999;text-align:center;padding:20px">暂无记录</div>';
+      return;
+    }
+    let html = '';
+    reports.forEach(rep => {
+      const ts = rep.created_at ? new Date(rep.created_at).toLocaleString('zh-CN', {timeZone:'Asia/Shanghai'}) : '';
+      html += `<div class="report-item">
+        <div class="meta">${rep.store_name} · ${rep.slot_label} · ${rep.report_date} ${ts}</div>
+        <div class="raw">${escHtml(rep.raw_text)}</div>
+      </div>`;
+    });
+    container.innerHTML = html;
+  } catch(e) {
+    document.getElementById('historyList').innerHTML = '<div style="color:#E53935">加载失败</div>';
+  }
+}
+
+// ═══ 告警设置 ═══
+async function loadAlertConfig() {
+  try {
+    const r = await fetch('/api/system-config');
+    const config = await r.json();
+    if (config.alert_webhook_url) {
+      document.getElementById('alertWebhookUrl').value = config.alert_webhook_url;
+    }
+  } catch(e) {}
+}
+
+async function saveAlertConfig() {
+  const url = document.getElementById('alertWebhookUrl').value.trim();
+  await fetch('/api/system-config', {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({key: 'alert_webhook_url', value: url})
+  });
+  showToast('✅ 告警 Webhook 已保存', 'success');
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>临期食材上报</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
+  background: #FFF5F0;
+  color: #333;
+  min-height: 100vh;
+}
+.header {
+  background: linear-gradient(135deg, #E65C1E, #D45500);
+  color: #fff;
+  padding: 16px 20px;
+  text-align: center;
+}
+.header h1 { font-size: 18px; font-weight: 600; }
+.header p { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+.container { max-width: 500px; margin: 0 auto; padding: 16px; }
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.row { margin-bottom: 12px; }
+.row:last-child { margin-bottom: 0; }
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 4px;
+}
+select, input[type="number"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #E0D5CC;
+  border-radius: 8px;
+  font-size: 15px;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+}
+select:focus, input:focus { border-color: #E65C1E; }
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #F5EDE8;
+}
+.menu-item:last-child { border-bottom: none; }
+.menu-item .name {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 500;
+}
+.menu-item .name .unit {
+  font-size: 12px;
+  font-weight: 400;
+  color: #999;
+  margin-left: 4px;
+}
+.menu-item input {
+  width: 80px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.menu-item .zero-btn {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #666;
+  flex-shrink: 0;
+}
+.menu-item .zero-btn:hover { background: #eee; }
+.menu-item.error input {
+  border-color: #E53935;
+  background: #FFF5F5;
+}
+.menu-item.error .name { color: #E53935; }
+.error-text {
+  color: #E53935;
+  font-size: 12px;
+  margin-top: 2px;
+  display: none;
+}
+.menu-item.error .error-text { display: block; }
+.btn-submit {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #E65C1E, #D45500);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-submit:hover:not(:disabled) { opacity: 0.9; }
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 999;
+  display: none;
+  max-width: 90%;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.toast.success { background: #43A047; color: #fff; }
+.toast.error { background: #E53935; color: #fff; }
+.toast.warning { background: #FF8F00; color: #fff; }
+.result-box {
+  display: none;
+  margin-top: 12px;
+  background: #F5EDE8;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: monospace;
+  line-height: 1.6;
+}
+.copy-btn {
+  display: none;
+  margin-top: 8px;
+  padding: 8px 16px;
+  background: #fff;
+  border: 1.5px solid #E65C1E;
+  color: #E65C1E;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  width: 100%;
+}
+.copy-btn:hover { background: #FFF5F0; }
+.hint {
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🍳 临期食材上报</h1>
+  <p>只填数字，系统自动发群</p>
+</div>
+
+<div class="container">
+  <div class="card">
+    <div class="row">
+      <label>选择门店</label>
+      <select id="storeSelect" onchange="loadMenu()">
+        <option value="">— 请选择门店 —</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>上报时段</label>
+      <select id="slotSelect">
+        <option value="早10:00">早 10:00</option>
+        <option value="午12:00">午 12:00</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card" id="menuCard" style="display:none">
+    <div id="menuList"></div>
+    <button class="btn-submit" id="submitBtn" onclick="submitReport()" disabled>提交上报</button>
+    <div class="result-box" id="resultBox"></div>
+    <button class="copy-btn" id="copyBtn" onclick="copyResult()">📋 复制文案备用</button>
+  </div>
+
+  <div class="hint" id="statusHint"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+let stores = [];
+let menuItems = [];
+
+async function init() {
+  try {
+    const r = await fetch('/api/stores');
+    stores = await r.json();
+    const sel = document.getElementById('storeSelect');
+    stores.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.name;
+      sel.appendChild(opt);
+    });
+    // 自动判断时段
+    const h = new Date().getHours();
+    if (h >= 11 && h < 15) document.getElementById('slotSelect').value = '午12:00';
+    else if (h >= 15) document.getElementById('slotSelect').value = '早10:00';
+    document.getElementById('statusHint').textContent = '已连接服务器';
+  } catch(e) {
+    showToast('无法连接服务器，请检查网络', 'error');
+    document.getElementById('statusHint').textContent = '❌ 连接失败';
+  }
+}
+
+async function loadMenu() {
+  const storeId = document.getElementById('storeSelect').value;
+  const card = document.getElementById('menuCard');
+  const list = document.getElementById('menuList');
+  const submitBtn = document.getElementById('submitBtn');
+  const resultBox = document.getElementById('resultBox');
+  const copyBtn = document.getElementById('copyBtn');
+
+  resultBox.style.display = 'none';
+  copyBtn.style.display = 'none';
+  submitBtn.disabled = true;
+
+  if (!storeId) { card.style.display = 'none'; return; }
+
+  try {
+    const r = await fetch(`/api/stores/${storeId}/menu`);
+    menuItems = await r.json();
+    list.innerHTML = '';
+    menuItems.forEach((item, idx) => {
+      const div = document.createElement('div');
+      div.className = 'menu-item';
+      div.id = `item-${idx}`;
+      div.innerHTML = `
+        <span class="name">${item.name}<span class="unit">${item.unit}</span></span>
+        <button class="zero-btn" onclick="document.getElementById('val-${idx}').value=0;validateAll()">0</button>
+        <input type="number" id="val-${idx}" min="0" step="1" value=""
+               placeholder="0" oninput="validateItem(${idx})"
+               onfocus="if(!this.value)this.value=''" onblur="if(this.value==='')this.value=''">
+      `;
+      list.appendChild(div);
+    });
+    card.style.display = 'block';
+    submitBtn.disabled = false;
+  } catch(e) {
+    showToast('加载菜品失败', 'error');
+  }
+}
+
+function validateItem(idx) {
+  const input = document.getElementById(`val-${idx}`);
+  const item = document.getElementById(`item-${idx}`);
+  const val = input.value.trim();
+  if (val === '') {
+    item.classList.add('error');
+  } else if (isNaN(val) || parseFloat(val) < 0) {
+    item.classList.add('error');
+  } else {
+    item.classList.remove('error');
+  }
+  validateAll();
+}
+
+function validateAll() {
+  let hasError = false;
+  menuItems.forEach((_, idx) => {
+    const input = document.getElementById(`val-${idx}`);
+    const item = document.getElementById(`item-${idx}`);
+    const val = input.value.trim();
+    if (val === '' || isNaN(val) || parseFloat(val) < 0) {
+      item.classList.add('error');
+      hasError = true;
+    } else {
+      item.classList.remove('error');
+    }
+  });
+  document.getElementById('submitBtn').disabled = hasError;
+}
+
+async function submitReport() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '提交中...';
+
+  const storeId = parseInt(document.getElementById('storeSelect').value);
+  const slotLabel = document.getElementById('slotSelect').value;
+
+  const items = [];
+  menuItems.forEach((item, idx) => {
+    const val = document.getElementById(`val-${idx}`).value.trim();
+    items.push({
+      name: item.name,
+      unit: item.unit,
+      value: parseFloat(val) || 0,
+    });
+  });
+
+  try {
+    const r = await fetch('/api/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ store_id: storeId, slot_label: slotLabel, items }),
+    });
+    const result = await r.json();
+    if (r.ok && result.success) {
+      const resultBox = document.getElementById('resultBox');
+      resultBox.textContent = result.raw_text;
+      resultBox.style.display = 'block';
+      document.getElementById('copyBtn').style.display = 'block';
+      showToast(result.pushed ? '✅ 已提交并发送到群' : '✅ 已提交（群消息推送失败，请手动复制）',
+                result.pushed ? 'success' : 'warning');
+    } else if (r.status === 409) {
+      showToast('⚠️ 今日该时段已上报过', 'warning');
+    } else {
+      showToast('❌ 提交失败: ' + (result.detail || '未知错误'), 'error');
+    }
+  } catch(e) {
+    showToast('❌ 网络错误，请重试', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '提交上报';
+  }
+}
+
+function copyResult() {
+  const text = document.getElementById('resultBox').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('📋 已复制到剪贴板', 'success');
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    showToast('📋 已复制', 'success');
+  });
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 4000);
+}
+
+init();
+</script>
+</body>
+</html>
