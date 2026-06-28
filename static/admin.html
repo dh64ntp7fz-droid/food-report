@@ -214,7 +214,7 @@ function renderMenuAdmin() {
         <td><input type="text" value="${escHtml(item.name)}" id="mn_${s.id}_${item.id}_name" style="width:95%"></td>
         <td><input type="text" value="${escHtml(item.unit)}" id="mn_${s.id}_${item.id}_unit" style="width:80px"></td>
         <td>
-          <button class="btn btn-sm btn-primary" onclick="saveMenuItem(${s.id},${item.id})">保存</button>
+          <button class="btn btn-sm btn-primary" onclick="saveMenuItem(${s.id},${item.id})" style="margin-right:8px">保存</button>
           <button class="btn btn-sm btn-danger" onclick="deleteMenuItem(${s.id},${item.id})">删除</button>
         </td>
       </tr>`;
