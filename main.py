@@ -32,6 +32,9 @@ HEADERS = {
     "Prefer": "return=representation",
 }
 
+# 环境判断
+IS_RENDER = os.environ.get("RENDER", False)
+
 # 暗号（修改敏感配置需要）
 SECRET_CODE = os.environ.get("SECRET_CODE", "无敌小帅")
 
