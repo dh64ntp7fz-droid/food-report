@@ -32,8 +32,17 @@ HEADERS = {
     "Prefer": "return=representation",
 }
 
-# 环境判断
-IS_RENDER = os.environ.get("RENDER", False)
+# 暗号（修改敏感配置需要）
+SECRET_CODE = os.environ.get("SECRET_CODE", "无敌小帅")
+
+def verify_secret(request_body: dict = None, headers: dict = None):
+    """检查暗号"""
+    code = ""
+    if request_body and "secret" in request_body:
+        code = request_body["secret"]
+    if not code and headers and "x-secret" in headers:
+        code = headers["x-secret"]
+    return code == SECRET_CODE
 
 # ─── 缓存 ───
 cache = {}
@@ -296,6 +305,8 @@ def get_webhook_config():
 @app.post("/api/webhook-config")
 def update_webhook_config(data: dict):
     """更新 Webhook 配置"""
+    if not verify_secret(request_body=data):
+        raise HTTPException(403, "暗号错误，无权修改")
     store_id = data.get("store_id")
     webhook_url = data.get("webhook_url", "")
     if not store_id:
@@ -315,6 +326,8 @@ def get_system_config():
 @app.put("/api/system-config")
 def update_system_config(data: dict):
     """更新系统配置"""
+    if not verify_secret(request_body=data):
+        raise HTTPException(403, "暗号错误，无权修改")
     key = data.get("key")
     value = data.get("value")
     if not key:

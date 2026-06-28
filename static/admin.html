@@ -332,7 +332,13 @@ async function fillDefaultWebhooks() {
   showToast('已填入各店 Webhook，点击保存生效', 'success');
 }
 
+function checkSecret() {
+  const answer = prompt('🔐 请输入暗号（我是谁？）');
+  return answer === '无敌小帅';
+}
+
 async function saveWebhooks() {
+  if (!checkSecret()) { showToast('❌ 暗号错误，保存失败', 'error'); return; }
   for (const s of stores) {
     const input = document.getElementById(`wh_${s.id}`);
     if (!input) continue;
@@ -340,7 +346,7 @@ async function saveWebhooks() {
     await fetch('/api/webhook-config', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({store_id: s.id, webhook_url: url})
+      body: JSON.stringify({store_id: s.id, webhook_url: url, secret: '无敌小帅'})
     });
   }
   showToast('✅ 全部 Webhook 已保存', 'success');
@@ -387,11 +393,12 @@ async function loadAlertConfig() {
 }
 
 async function saveAlertConfig() {
+  if (!checkSecret()) { showToast('❌ 暗号错误，保存失败', 'error'); return; }
   const url = document.getElementById('alertWebhookUrl').value.trim();
   await fetch('/api/system-config', {
     method: 'PUT',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({key: 'alert_webhook_url', value: url})
+    body: JSON.stringify({key: 'alert_webhook_url', value: url, secret: '无敌小帅'})
   });
   showToast('✅ 告警 Webhook 已保存', 'success');
 }
