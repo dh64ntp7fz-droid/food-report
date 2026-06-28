@@ -209,6 +209,9 @@ def submit_report(data: dict):
     stores = api_get("food_stores", {"id": f"eq.{store_id}", "select": "name"})
     store_name = stores[0]["name"] if stores else data.get("store_name", "")
 
+    today = date.today().isoformat()
+    en_slot = get_en_slot_from_label(slot_label)
+
     # 生成文案
     raw_text = build_report_text(store_name, slot_label, items)
 
