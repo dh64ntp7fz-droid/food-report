@@ -383,6 +383,7 @@ def update_menu_item(item_id: int, data: dict):
         update["sort_order"] = data["sort_order"]
     if update:
         api_put("food_menu_items", update, f"id=eq.{item_id}")
+    invalidate_cache("stores")
     return {"success": True}
 
 
@@ -390,6 +391,7 @@ def update_menu_item(item_id: int, data: dict):
 def delete_menu_item(item_id: int):
     """删除菜品"""
     api_delete("food_menu_items", f"id=eq.{item_id}")
+    invalidate_cache("stores")
     return {"success": True}
 
 
