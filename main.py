@@ -194,6 +194,20 @@ def _fetch_stores():
     return stores
 
 
+@app.put("/api/stores/{store_id}")
+def update_store(store_id: int, data: dict):
+    """更新门店信息（排序等）"""
+    update = {}
+    if "sort_order" in data:
+        update["sort_order"] = data["sort_order"]
+    if "name" in data:
+        update["name"] = data["name"]
+    if update:
+        api_put("food_stores", update, f"id=eq.{store_id}")
+        invalidate_cache("stores")
+    return {"success": True}
+
+
 @app.get("/api/stores/{store_id}/menu")
 def get_menu(store_id: int):
     """获取某店菜品列表"""
