@@ -22,7 +22,7 @@ log = logging.getLogger("food-report")
 
 # ─── 配置 ───
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://ieidvazvzulsrfopjvyf.supabase.co")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "eyJhbG...qyb0")
 API_BASE = f"{SUPABASE_URL}/rest/v1"
 HEADERS = {
     "apikey": SUPABASE_KEY,
