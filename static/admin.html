@@ -120,8 +120,13 @@ input:focus { border-color: #E65C1E; }
   <!-- 菜品管理 -->
   <div class="panel active" id="panel-menu">
     <div class="card">
-      <h3>各门店菜品</h3>
-      <div id="menuAdmin"></div>
+      <h3>菜品管理</h3>
+      <div style="margin-bottom:12px">
+        <select id="menuStoreFilter" onchange="renderMenuAdmin(parseInt(this.value))">
+          <option value="">— 请选择门店 —</option>
+        </select>
+      </div>
+      <div id="menuAdmin"><p style="color:#999;padding:16px">请先选择门店</p></div>
     </div>
   </div>
 
@@ -185,11 +190,13 @@ async function loadStores() {
   const r = await fetch('/api/stores');
   stores = await r.json();
   stores.forEach(s => { menuItems[s.id] = s.menu_items || []; });
-  // 填充门店下拉
-  const sel = document.getElementById('filterStore');
-  stores.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s.id; opt.textContent = s.name; sel.appendChild(opt);
+  // 填充门店下拉（菜品管理也使用）
+  document.querySelectorAll('#filterStore, #menuStoreFilter').forEach(sel => {
+    sel.innerHTML = '<option value="">— 请选择门店 —</option>';
+    stores.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id; opt.textContent = s.name; sel.appendChild(opt);
+    });
   });
 }
 
@@ -201,15 +208,17 @@ function switchTab(name) {
 }
 
 // ═══ 菜品管理 ═══
-function renderMenuAdmin() {
+function renderMenuAdmin(storeId) {
   const container = document.getElementById('menuAdmin');
+  if (!storeId) { container.innerHTML = '<p style="color:#999;padding:16px">请先选择门店</p>'; return; }
+  const s = stores.find(x => x.id === storeId);
+  if (!s) return;
+  const items = menuItems[s.id] || [];
   let html = '';
-  stores.forEach(s => {
-    const items = menuItems[s.id] || [];
-    html += `<div style="margin-bottom:16px">`;
-    html += `<h4 style="font-size:14px;margin-bottom:6px;color:#333">${s.name}</h4>`;
-    html += `<table><tr><th style="width:50%">菜品</th><th style="width:30%">单位</th><th style="width:20%">操作</th></tr>`;
-    items.forEach((item, idx) => {
+  html += `<div style="margin-bottom:16px">`;
+  html += `<h4 style="font-size:14px;margin-bottom:6px;color:#333">${s.name}</h4>`;
+  html += `<table><tr><th style="width:50%">菜品</th><th style="width:30%">单位</th><th style="width:20%">操作</th></tr>`;
+  items.forEach((item) => {
       html += `<tr>
         <td><input type="text" value="${escHtml(item.name)}" id="mn_${s.id}_${item.id}_name" style="width:95%"></td>
         <td><input type="text" value="${escHtml(item.unit)}" id="mn_${s.id}_${item.id}_unit" style="width:80px"></td>
