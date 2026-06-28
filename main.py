@@ -34,7 +34,7 @@ HEADERS = {
 # 环境判断
 IS_RENDER = os.environ.get("RENDER", False)
 
-app = FastAPI(title="临期食材上报系统")
+app = FastAPI(title="湘阁里辣 · 新鲜食材菜品推荐系统")
 
 # CORS
 app.add_middleware(
