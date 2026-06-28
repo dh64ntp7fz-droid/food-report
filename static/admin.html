@@ -123,7 +123,7 @@ input:focus { border-color: #E65C1E; }
       <h3>菜品管理</h3>
       <div style="margin-bottom:12px">
         <select id="menuStoreFilter" onchange="renderMenuAdmin(parseInt(this.value))">
-          <option value="">— 请选择门店 —— 填写当日推荐菜品 —</option>
+          <option value="">请选择门店 · 填写当日推荐菜品</option>
         </select>
       </div>
       <div id="menuAdmin"><p style="color:#999;padding:16px">请先选择门店</p></div>
@@ -192,7 +192,7 @@ async function loadStores() {
   stores.forEach(s => { menuItems[s.id] = s.menu_items || []; });
   // 填充门店下拉（菜品管理也使用）
   document.querySelectorAll('#filterStore, #menuStoreFilter').forEach(sel => {
-    sel.innerHTML = '<option value="">— 请选择门店 —— 填写当日推荐菜品 —</option>';
+    sel.innerHTML = '<option value="">请选择门店 · 填写当日推荐菜品</option>';
     stores.forEach(s => {
       const opt = document.createElement('option');
       opt.value = s.id; opt.textContent = s.name; sel.appendChild(opt);
