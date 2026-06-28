@@ -123,7 +123,7 @@ input:focus { border-color: #E65C1E; }
       <h3>菜品管理</h3>
       <div style="margin-bottom:12px">
         <select id="menuStoreFilter" onchange="renderMenuAdmin(parseInt(this.value))">
-          <option value="">请选择门店 · 填写当日推荐菜品</option>
+          <option value="">请选择门店 · 管理推荐菜品库</option>
         </select>
       </div>
       <div id="menuAdmin"><p style="color:#999;padding:16px">请先选择门店</p></div>
@@ -190,14 +190,22 @@ async function loadStores() {
   const r = await fetch('/api/stores');
   stores = await r.json();
   stores.forEach(s => { menuItems[s.id] = s.menu_items || []; });
-  // 填充门店下拉（菜品管理也使用）
-  document.querySelectorAll('#filterStore, #menuStoreFilter').forEach(sel => {
-    sel.innerHTML = '<option value="">请选择门店 · 填写当日推荐菜品</option>';
+  // 填充门店下拉
+  const filterSel = document.getElementById('filterStore');
+  filterSel.innerHTML = '<option value="">请选择门店 · 填写当日推荐菜品</option>';
+  stores.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id; opt.textContent = s.name; filterSel.appendChild(opt);
+  });
+  // 菜品管理门店下拉
+  const menuSel = document.getElementById('menuStoreFilter');
+  if (menuSel) {
+    menuSel.innerHTML = '<option value="">请选择门店 · 管理推荐菜品库</option>';
     stores.forEach(s => {
       const opt = document.createElement('option');
-      opt.value = s.id; opt.textContent = s.name; sel.appendChild(opt);
+      opt.value = s.id; opt.textContent = s.name; menuSel.appendChild(opt);
     });
-  });
+  }
 }
 
 function switchTab(name) {

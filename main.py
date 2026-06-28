@@ -149,12 +149,14 @@ def get_en_slot_from_label(label: str) -> str:
 def list_stores():
     """获取门店列表（附带菜品数量）"""
     stores = api_get("food_stores", {"order": "sort_order.asc"})
+    # 一次性获取所有菜品，按store_id分组（避免N+1查询）
+    all_items = api_get("food_menu_items", {"order": "sort_order.asc"})
+    by_store = {}
+    for item in all_items:
+        sid = item["store_id"]
+        by_store.setdefault(sid, []).append(item)
     for s in stores:
-        items = api_get("food_menu_items", {
-            "store_id": f"eq.{s['id']}",
-            "order": "sort_order.asc",
-        })
-        s["menu_items"] = items
+        s["menu_items"] = by_store.get(s["id"], [])
     return stores
 
 
