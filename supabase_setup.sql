@@ -112,12 +112,12 @@ ALTER TABLE food_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE food_webhook_config ENABLE ROW LEVEL SECURITY;
 ALTER TABLE food_system_config ENABLE ROW LEVEL SECURITY;
 
--- 允许 service_role 全部访问（我们只用 service_role key）
-CREATE POLICY "service_role_all_access" ON food_stores FOR ALL TO service_role USING (true) WITH CHECK (true);
-CREATE POLICY "service_role_all_access" ON food_menu_items FOR ALL TO service_role USING (true) WITH CHECK (true);
-CREATE POLICY "service_role_all_access" ON food_reports FOR ALL TO service_role USING (true) WITH CHECK (true);
-CREATE POLICY "service_role_all_access" ON food_webhook_config FOR ALL TO service_role USING (true) WITH CHECK (true);
-CREATE POLICY "service_role_all_access" ON food_system_config FOR ALL TO service_role USING (true) WITH CHECK (true);
+-- 允许 anon 全部访问（后端使用 anon key）
+CREATE POLICY "anon_all_access" ON food_stores FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all_access" ON food_menu_items FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all_access" ON food_reports FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all_access" ON food_webhook_config FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all_access" ON food_system_config FOR ALL TO anon USING (true) WITH CHECK (true);
 
 -- 允许 anon 只读门店和菜品（前端需要查询）
 CREATE POLICY "anon_read_stores" ON food_stores FOR SELECT TO anon USING (true);
