@@ -121,9 +121,9 @@ def push_webhook(url: str, content: str) -> bool:
 
 def build_report_text(store_name: str, slot_label: str, items: list) -> str:
     """生成标准上报文案"""
-    lines = [f"【{store_name} {slot_label} 临期食材上报】"]
+    lines = [f"【湘阁里辣 · 新鲜食材 · 菜品推荐】"]
     for item in items:
-        lines.append(f"{item['name']}（{item['unit']}）：{item['value']}")
+        lines.append(f"{item['name']}：{item['value']}份")
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
     lines.append(f"上报时间：{now}")
     return "\n".join(lines)
@@ -132,11 +132,9 @@ def build_report_text(store_name: str, slot_label: str, items: list) -> str:
 def get_cn_slot() -> str:
     """获取当前时段中文标签"""
     h = datetime.now().hour
-    if h < 11:
+    if h < 13:
         return "早10:00"
-    elif h < 15:
-        return "午12:00"
-    return "晚时段"
+    return "晚17:00"
 
 
 def get_en_slot_from_label(label: str) -> str:
@@ -375,8 +373,8 @@ def health():
 
 CHECK_TIMES = [
     (10, 5, "早10:00", "morning"),   # 10:05 检查早10点
-    (12, 5, "午12:00", "noon"),      # 12:05 检查午12点
-    (12, 30, "午12:00", "noon"),     # 12:30 二次提醒
+    (17, 5, "晚17:00", "noon"),      # 17:05 检查晚17点
+    (17, 30, "晚17:00", "noon"),     # 17:30 二次提醒
 ]
 
 
@@ -419,13 +417,18 @@ async def check_missed_reports():
             for store in stores:
                 sid = store["id"]
                 if sid not in submitted_ids:
-                    msg = (
-                        f"⚠️ 漏报提醒\n"
-                        f"{store['name']} {slot_label} 临期食材尚未上报，\n"
-                        f"请尽快填写！"
-                    )
-                    push_webhook(alert_url, msg)
-                    log.info(f"  推漏报告警: {store['name']} {slot_label}")
+                    # 获取该门店的webhook
+                    webhooks = api_get("food_webhook_config", {"store_id": f"eq.{sid}"})
+                    wh_url = webhooks[0].get("webhook_url", "") if webhooks else ""
+                    if not wh_url:
+                        wh_url = alert_url  # 没有独立webhook时用系统默认
+                    if wh_url:
+                        msg = (
+                            f"⚠️ {store['name']} {slot_label} 新鲜食材尚未上报，\n"
+                            f"请尽快填写！"
+                        )
+                        push_webhook(wh_url, msg)
+                        log.info(f"  推漏报告警: {store['name']} {slot_label}")
 
     except Exception as e:
         log.error(f"漏报检查异常: {e}")

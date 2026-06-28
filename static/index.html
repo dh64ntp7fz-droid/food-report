@@ -15,188 +15,93 @@ body {
 .header {
   background: linear-gradient(135deg, #E65C1E, #D45500);
   color: #fff;
-  padding: 20px;
+  padding: 16px 20px;
   text-align: center;
 }
 .header h1 { font-size: 20px; font-weight: 700; }
 .header p { font-size: 13px; opacity: 0.9; margin-top: 4px; }
-.container { max-width: 500px; margin: 0 auto; padding: 16px; }
+.toolbar {
+  display: flex; gap: 10px; align-items: center;
+  background: #fff; border-radius: 12px; padding: 14px 16px;
+  margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.toolbar select {
+  flex: 1; padding: 8px 10px; border: 1.5px solid #E0D5CC;
+  border-radius: 8px; font-size: 14px; outline: none;
+}
+.container { max-width: 500px; margin: 0 auto; padding: 0 16px 80px; }
 .card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  background: #fff; border-radius: 12px; padding: 14px 16px;
+  margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  display: flex; align-items: center; gap: 10px;
 }
-.row { margin-bottom: 12px; }
-.row:last-child { margin-bottom: 0; }
-label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: #555;
-  margin-bottom: 4px;
+.item-name { flex: 1; font-size: 15px; font-weight: 500; }
+.qty-control {
+  display: flex; align-items: center; border: 1.5px solid #E0D5CC;
+  border-radius: 8px; overflow: hidden; flex-shrink: 0;
 }
-select, input[type="number"] {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1.5px solid #E0D5CC;
-  border-radius: 8px;
-  font-size: 15px;
-  background: #fff;
+.qty-control button {
+  width: 36px; height: 36px; border: none; background: #f8f8f8;
+  font-size: 18px; cursor: pointer; color: #333;
+}
+.qty-control button:active { background: #eee; }
+.qty-control input {
+  width: 48px; height: 36px; border: none; border-left: 1.5px solid #E0D5CC;
+  border-right: 1.5px solid #E0D5CC; text-align: center; font-size: 15px;
   outline: none;
-  transition: border-color 0.2s;
 }
-select:focus, input:focus { border-color: #E65C1E; }
-.menu-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid #F5EDE8;
+.submit-btn {
+  padding: 8px 16px; border: none; border-radius: 8px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  flex-shrink: 0; transition: opacity 0.2s;
 }
-.menu-item:last-child { border-bottom: none; }
-.menu-item .name {
-  flex: 1;
-  font-size: 15px;
-  font-weight: 500;
-}
-.menu-item .name .unit {
-  font-size: 12px;
-  font-weight: 400;
-  color: #999;
-  margin-left: 4px;
-}
-.menu-item input {
-  width: 80px;
-  text-align: center;
-  flex-shrink: 0;
-}
-.menu-item .zero-btn {
-  background: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 12px;
-  cursor: pointer;
-  color: #666;
-  flex-shrink: 0;
-}
-.menu-item .zero-btn:hover { background: #eee; }
-.menu-item.error input {
-  border-color: #E53935;
-  background: #FFF5F5;
-}
-.menu-item.error .name { color: #E53935; }
-.error-text {
-  color: #E53935;
-  font-size: 12px;
-  margin-top: 2px;
-  display: none;
-}
-.menu-item.error .error-text { display: block; }
-.btn-submit {
-  width: 100%;
-  padding: 14px;
-  background: linear-gradient(135deg, #E65C1E, #D45500);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-.btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn-submit:hover:not(:disabled) { opacity: 0.9; }
+.submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.submit-btn.ready { background: #E65C1E; color: #fff; }
+.submit-btn.ready:hover:not(:disabled) { opacity: 0.85; }
+.submit-btn.done { background: #e0e0e0; color: #999; }
 .toast {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  z-index: 999;
-  display: none;
-  max-width: 90%;
-  text-align: center;
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+  padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 500;
+  z-index: 999; display: none; max-width: 90%; text-align: center;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 .toast.success { background: #43A047; color: #fff; }
 .toast.error { background: #E53935; color: #fff; }
 .toast.warning { background: #FF8F00; color: #fff; }
 .result-box {
+  margin-top: 12px; background: #F5EDE8; border-radius: 10px;
+  padding: 14px; font-size: 14px; white-space: pre-wrap; line-height: 1.6;
   display: none;
-  margin-top: 12px;
-  background: #F5EDE8;
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 13px;
-  white-space: pre-wrap;
-  word-break: break-all;
-  font-family: monospace;
-  line-height: 1.6;
 }
-.copy-btn {
-  display: none;
-  margin-top: 8px;
-  padding: 8px 16px;
-  background: #fff;
-  border: 1.5px solid #E65C1E;
-  color: #E65C1E;
-  border-radius: 6px;
-  font-size: 13px;
-  cursor: pointer;
-  width: 100%;
-}
-.copy-btn:hover { background: #FFF5F0; }
-.hint {
-  font-size: 12px;
-  color: #999;
-  margin-top: 8px;
-  text-align: center;
-}
+.hint { font-size: 12px; color: #999; margin-top: 10px; text-align: center; }
 </style>
 </head>
 <body>
 <div class="header">
   <h1>🆕 新鲜食材 · 菜品推荐</h1>
-  <p>各门店每日新鲜食材上报，推荐当日招牌菜</p>
+  <p>各门店每日上报新鲜食材</p>
 </div>
 
-<div class="container">
-  <div class="card">
-    <div class="row">
-      <label>选择门店</label>
-      <select id="storeSelect" onchange="loadMenu()">
-        <option value="">— 请选择门店 —</option>
-      </select>
-    </div>
-    <div class="row">
-      <label>上报时段</label>
-      <select id="slotSelect">
-        <option value="早10:00">早 10:00</option>
-        <option value="午12:00">午 12:00</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="card" id="menuCard" style="display:none">
-    <div id="menuList"></div>
-    <button class="btn-submit" id="submitBtn" onclick="submitReport()" disabled>提交上报</button>
-    <div class="result-box" id="resultBox"></div>
-    <button class="copy-btn" id="copyBtn" onclick="copyResult()">📋 复制文案备用</button>
-  </div>
-
-  <div class="hint" id="statusHint"></div>
+<div class="toolbar">
+  <select id="storeSelect" onchange="loadMenu()">
+    <option value="">— 门店 —</option>
+  </select>
+  <select id="slotSelect">
+    <option value="早10:00">早 10:00</option>
+    <option value="晚17:00">晚 17:00</option>
+  </select>
 </div>
+
+<div class="container" id="menuContainer" style="display:none"></div>
+<div class="result-box" id="resultBox"></div>
+<div class="hint" id="statusHint"></div>
 
 <div class="toast" id="toast"></div>
+<a href="/admin" style="position:fixed;bottom:20px;right:20px;background:#E65C1E;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:13px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,0.2);z-index:999;">⚙️ 管理</a>
 <script>
 let stores = [];
 let menuItems = [];
+let submittedIds = new Set();
 
 async function init() {
   try {
@@ -205,148 +110,116 @@ async function init() {
     const sel = document.getElementById('storeSelect');
     stores.forEach(s => {
       const opt = document.createElement('option');
-      opt.value = s.id;
-      opt.textContent = s.name;
+      opt.value = s.id; opt.textContent = s.name;
       sel.appendChild(opt);
     });
-    // 自动判断时段
-    const h = new Date().getHours();
-    if (h >= 11 && h < 15) document.getElementById('slotSelect').value = '午12:00';
-    else if (h >= 15) document.getElementById('slotSelect').value = '早10:00';
-    document.getElementById('statusHint').textContent = '已连接服务器';
+    document.getElementById('statusHint').textContent = '已连接';
   } catch(e) {
-    showToast('无法连接服务器，请检查网络', 'error');
+    showToast('无法连接服务器', 'error');
     document.getElementById('statusHint').textContent = '❌ 连接失败';
   }
 }
 
 async function loadMenu() {
   const storeId = document.getElementById('storeSelect').value;
-  const card = document.getElementById('menuCard');
-  const list = document.getElementById('menuList');
-  const submitBtn = document.getElementById('submitBtn');
-  const resultBox = document.getElementById('resultBox');
-  const copyBtn = document.getElementById('copyBtn');
+  const container = document.getElementById('menuContainer');
 
-  resultBox.style.display = 'none';
-  copyBtn.style.display = 'none';
-  submitBtn.disabled = true;
-
-  if (!storeId) { card.style.display = 'none'; return; }
+  if (!storeId) { container.style.display = 'none'; return; }
 
   try {
     const r = await fetch(`/api/stores/${storeId}/menu`);
     menuItems = await r.json();
-    list.innerHTML = '';
+    container.innerHTML = '';
+    submittedIds = new Set();
+
     menuItems.forEach((item, idx) => {
-      const div = document.createElement('div');
-      div.className = 'menu-item';
-      div.id = `item-${idx}`;
-      div.innerHTML = `
-        <span class="name">${item.name}<span class="unit">${item.unit}</span></span>
-        <button class="zero-btn" onclick="document.getElementById('val-${idx}').value=0;validateAll()">0</button>
-        <input type="number" id="val-${idx}" min="0" step="1" value=""
-               placeholder="0" oninput="validateItem(${idx})"
-               onfocus="if(!this.value)this.value=''" onblur="if(this.value==='')this.value=''">
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.id = `card-${idx}`;
+      card.innerHTML = `
+        <span class="item-name">${item.name}</span>
+        <div class="qty-control">
+          <button onclick="changeQty(${idx}, -1)">−</button>
+          <input type="number" id="val-${idx}" min="0" value="0" onchange="checkSubmit(${idx})">
+          <button onclick="changeQty(${idx}, 1)">+</button>
+        </div>
+        <button class="submit-btn ready" id="btn-${idx}" onclick="submitOne(${idx})">提交</button>
       `;
-      list.appendChild(div);
+      container.appendChild(card);
     });
-    card.style.display = 'block';
-    submitBtn.disabled = false;
+    container.style.display = 'block';
+    document.getElementById('resultBox').style.display = 'none';
   } catch(e) {
     showToast('加载菜品失败', 'error');
   }
 }
 
-function validateItem(idx) {
+function changeQty(idx, delta) {
   const input = document.getElementById(`val-${idx}`);
-  const item = document.getElementById(`item-${idx}`);
-  const val = input.value.trim();
-  if (val === '') {
-    item.classList.add('error');
-  } else if (isNaN(val) || parseFloat(val) < 0) {
-    item.classList.add('error');
+  let val = parseInt(input.value) || 0;
+  val = Math.max(0, val + delta);
+  input.value = val;
+  checkSubmit(idx);
+}
+
+function checkSubmit(idx) {
+  const val = parseInt(document.getElementById(`val-${idx}`).value) || 0;
+  const btn = document.getElementById(`btn-${idx}`);
+  if (val > 0 && !submittedIds.has(idx)) {
+    btn.className = 'submit-btn ready';
+    btn.disabled = false;
   } else {
-    item.classList.remove('error');
+    btn.disabled = true;
   }
-  validateAll();
 }
 
-function validateAll() {
-  let hasError = false;
-  menuItems.forEach((_, idx) => {
-    const input = document.getElementById(`val-${idx}`);
-    const item = document.getElementById(`item-${idx}`);
-    const val = input.value.trim();
-    if (val === '' || isNaN(val) || parseFloat(val) < 0) {
-      item.classList.add('error');
-      hasError = true;
-    } else {
-      item.classList.remove('error');
-    }
-  });
-  document.getElementById('submitBtn').disabled = hasError;
-}
+async function submitOne(idx) {
+  const val = parseInt(document.getElementById(`val-${idx}`).value) || 0;
+  if (val <= 0) return;
 
-async function submitReport() {
-  const btn = document.getElementById('submitBtn');
+  const btn = document.getElementById(`btn-${idx}`);
   btn.disabled = true;
-  btn.textContent = '提交中...';
+  btn.textContent = '...';
 
   const storeId = parseInt(document.getElementById('storeSelect').value);
   const slotLabel = document.getElementById('slotSelect').value;
-
-  const items = [];
-  menuItems.forEach((item, idx) => {
-    const val = document.getElementById(`val-${idx}`).value.trim();
-    items.push({
-      name: item.name,
-      unit: item.unit,
-      value: parseFloat(val) || 0,
-    });
-  });
+  const item = menuItems[idx];
 
   try {
     const r = await fetch('/api/report', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ store_id: storeId, slot_label: slotLabel, items }),
+      body: JSON.stringify({
+        store_id: storeId,
+        slot_label: slotLabel,
+        items: [{ name: item.name, unit: '份', value: val }]
+      }),
     });
     const result = await r.json();
     if (r.ok && result.success) {
-      const resultBox = document.getElementById('resultBox');
-      resultBox.textContent = result.raw_text;
-      resultBox.style.display = 'block';
-      document.getElementById('copyBtn').style.display = 'block';
-      showToast(result.pushed ? '✅ 已提交并发送到群' : '✅ 已提交（群消息推送失败，请手动复制）',
-                result.pushed ? 'success' : 'warning');
+      btn.className = 'submit-btn done';
+      btn.textContent = '✅';
+      submittedIds.add(idx);
+      
+      const box = document.getElementById('resultBox');
+      box.textContent = result.raw_text;
+      box.style.display = 'block';
+      showToast('✅ 已提交', 'success');
     } else if (r.status === 409) {
-      showToast('⚠️ 今日该时段已上报过', 'warning');
+      showToast('⚠️ 该时段已上报过', 'warning');
+      btn.className = 'submit-btn done';
+      btn.textContent = '✅';
+      submittedIds.add(idx);
     } else {
-      showToast('❌ 提交失败: ' + (result.detail || '未知错误'), 'error');
+      showToast('❌ ' + (result.detail || '提交失败'), 'error');
+      btn.disabled = false;
+      btn.textContent = '提交';
     }
   } catch(e) {
-    showToast('❌ 网络错误，请重试', 'error');
-  } finally {
+    showToast('❌ 网络错误', 'error');
     btn.disabled = false;
-    btn.textContent = '提交上报';
+    btn.textContent = '提交';
   }
-}
-
-function copyResult() {
-  const text = document.getElementById('resultBox').textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    showToast('📋 已复制到剪贴板', 'success');
-  }).catch(() => {
-    // fallback
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    ta.remove();
-    showToast('📋 已复制', 'success');
-  });
 }
 
 function showToast(msg, type) {
@@ -354,11 +227,10 @@ function showToast(msg, type) {
   t.textContent = msg;
   t.className = 'toast ' + type;
   t.style.display = 'block';
-  setTimeout(() => { t.style.display = 'none'; }, 4000);
+  setTimeout(() => { t.style.display = 'none'; }, 3000);
 }
 
 init();
 </script>
-<a href="/admin" style="position:fixed;bottom:20px;right:20px;background:#E65C1E;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:13px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,0.2);z-index:999;">⚙️ 管理</a>
 </body>
 </html>
