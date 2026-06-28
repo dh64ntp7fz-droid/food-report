@@ -14,12 +14,14 @@ body {
 }
 .header {
   background: linear-gradient(135deg, #E65C1E, #D45500);
-  color: #fff; padding: 16px 20px;
-  display: flex; align-items: center; justify-content: center;
+  color: #fff; padding: 20px 20px 14px; text-align: center;
+  position: relative;
 }
-.header h1 { font-size: 18px; font-weight: 700; flex: 1; text-align: center; }
+.header h1 { font-size: 20px; font-weight: 700; }
+.header p { font-size: 13px; opacity: 0.9; margin-top: 4px; }
 .header a {
-  color: #fff; text-decoration: none; font-size: 13px; opacity: 0.9;
+  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+  color: #fff; text-decoration: none; font-size: 13px;
   background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 6px;
 }
 .toolbar {
@@ -89,6 +91,7 @@ body {
 <body>
 <div class="header">
   <h1>🆕 新鲜食材 · 菜品推荐</h1>
+  <p>各门店每日上报新鲜食材</p>
   <a href="/admin">⚙️ 管理</a>
 </div>
 
