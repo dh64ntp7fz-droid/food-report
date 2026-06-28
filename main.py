@@ -224,8 +224,8 @@ def submit_report(data: dict):
         "store_name": store_name,
         "time_slot": en_slot,
         "slot_label": slot_label,
-        "data": json.dumps(data_map),
-        "items_detail": json.dumps(items, ensure_ascii=False),
+        "data": data_map,
+        "items_detail": items,
         "raw_text": raw_text,
         "report_date": today,
     }
