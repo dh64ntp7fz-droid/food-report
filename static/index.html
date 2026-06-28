@@ -14,20 +14,26 @@ body {
 }
 .header {
   background: linear-gradient(135deg, #E65C1E, #D45500);
-  color: #fff;
-  padding: 16px 20px;
-  text-align: center;
+  color: #fff; padding: 16px 20px;
+  display: flex; align-items: center; justify-content: center;
 }
-.header h1 { font-size: 20px; font-weight: 700; }
-.header p { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+.header h1 { font-size: 18px; font-weight: 700; flex: 1; text-align: center; }
+.header a {
+  color: #fff; text-decoration: none; font-size: 13px; opacity: 0.9;
+  background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 6px;
+}
 .toolbar {
   display: flex; gap: 10px; align-items: center;
   background: #fff; border-radius: 12px; padding: 14px 16px;
-  margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  margin: 12px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 .toolbar select {
   flex: 1; padding: 8px 10px; border: 1.5px solid #E0D5CC;
   border-radius: 8px; font-size: 14px; outline: none;
+}
+.toolbar .slot-label {
+  font-size: 14px; font-weight: 600; color: #E65C1E;
+  padding: 8px 12px; background: #FFF5F0; border-radius: 8px;
 }
 .container { max-width: 500px; margin: 0 auto; padding: 0 16px 80px; }
 .card {
@@ -50,15 +56,20 @@ body {
   border-right: 1.5px solid #E0D5CC; text-align: center; font-size: 15px;
   outline: none;
 }
-.submit-btn {
-  padding: 8px 16px; border: none; border-radius: 8px;
-  font-size: 13px; font-weight: 600; cursor: pointer;
-  flex-shrink: 0; transition: opacity 0.2s;
+.submit-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: #fff; padding: 12px 16px;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+  display: flex; gap: 10px; align-items: center;
 }
-.submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.submit-btn.ready { background: #E65C1E; color: #fff; }
-.submit-btn.ready:hover:not(:disabled) { opacity: 0.85; }
-.submit-btn.done { background: #e0e0e0; color: #999; }
+.submit-bar .count { font-size: 13px; color: #999; flex: 1; }
+.submit-bar button {
+  padding: 12px 24px; border: none; border-radius: 10px;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  background: #E65C1E; color: #fff; transition: opacity 0.2s;
+}
+.submit-bar button:disabled { opacity: 0.4; cursor: not-allowed; }
+.submit-bar button:hover:not(:disabled) { opacity: 0.85; }
 .toast {
   position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
   padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 500;
@@ -69,41 +80,43 @@ body {
 .toast.error { background: #E53935; color: #fff; }
 .toast.warning { background: #FF8F00; color: #fff; }
 .result-box {
-  margin-top: 12px; background: #F5EDE8; border-radius: 10px;
+  margin-top: 10px; background: #F5EDE8; border-radius: 10px;
   padding: 14px; font-size: 14px; white-space: pre-wrap; line-height: 1.6;
   display: none;
 }
-.hint { font-size: 12px; color: #999; margin-top: 10px; text-align: center; }
 </style>
 </head>
 <body>
 <div class="header">
   <h1>🆕 新鲜食材 · 菜品推荐</h1>
-  <p>各门店每日上报新鲜食材</p>
+  <a href="/admin">⚙️ 管理</a>
 </div>
 
 <div class="toolbar">
   <select id="storeSelect" onchange="loadMenu()">
     <option value="">— 门店 —</option>
   </select>
-  <select id="slotSelect">
-    <option value="早10:00">早 10:00</option>
-    <option value="晚17:00">晚 17:00</option>
-  </select>
+  <span class="slot-label" id="slotLabel">早10:00</span>
 </div>
 
 <div class="container" id="menuContainer" style="display:none"></div>
-<div class="result-box" id="resultBox"></div>
-<div class="hint" id="statusHint"></div>
+
+<div class="submit-bar" id="submitBar" style="display:none">
+  <span class="count" id="itemCount">已选 0 项</span>
+  <button id="submitBtn" onclick="submitAll()" disabled>提交</button>
+</div>
 
 <div class="toast" id="toast"></div>
-<a href="/admin" style="position:fixed;bottom:20px;right:20px;background:#E65C1E;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:13px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,0.2);z-index:999;">⚙️ 管理</a>
 <script>
 let stores = [];
 let menuItems = [];
-let submittedIds = new Set();
 
 async function init() {
+  // 自动判断时段
+  const h = new Date().getHours();
+  const slot = h < 13 ? '早10:00' : '晚17:00';
+  document.getElementById('slotLabel').textContent = slot;
+
   try {
     const r = await fetch('/api/stores');
     stores = await r.json();
@@ -113,42 +126,39 @@ async function init() {
       opt.value = s.id; opt.textContent = s.name;
       sel.appendChild(opt);
     });
-    document.getElementById('statusHint').textContent = '已连接';
   } catch(e) {
     showToast('无法连接服务器', 'error');
-    document.getElementById('statusHint').textContent = '❌ 连接失败';
   }
 }
 
 async function loadMenu() {
   const storeId = document.getElementById('storeSelect').value;
   const container = document.getElementById('menuContainer');
+  const submitBar = document.getElementById('submitBar');
 
-  if (!storeId) { container.style.display = 'none'; return; }
+  if (!storeId) { container.style.display = 'none'; submitBar.style.display = 'none'; return; }
 
   try {
     const r = await fetch(`/api/stores/${storeId}/menu`);
     menuItems = await r.json();
     container.innerHTML = '';
-    submittedIds = new Set();
 
     menuItems.forEach((item, idx) => {
       const card = document.createElement('div');
       card.className = 'card';
-      card.id = `card-${idx}`;
       card.innerHTML = `
         <span class="item-name">${item.name}</span>
         <div class="qty-control">
           <button onclick="changeQty(${idx}, -1)">−</button>
-          <input type="number" id="val-${idx}" min="0" value="0" onchange="checkSubmit(${idx})">
+          <input type="number" id="val-${idx}" min="0" value="0" onchange="updateCount()">
           <button onclick="changeQty(${idx}, 1)">+</button>
         </div>
-        <button class="submit-btn ready" id="btn-${idx}" onclick="submitOne(${idx})">提交</button>
       `;
       container.appendChild(card);
     });
     container.style.display = 'block';
-    document.getElementById('resultBox').style.display = 'none';
+    submitBar.style.display = 'flex';
+    updateCount();
   } catch(e) {
     showToast('加载菜品失败', 'error');
   }
@@ -159,67 +169,80 @@ function changeQty(idx, delta) {
   let val = parseInt(input.value) || 0;
   val = Math.max(0, val + delta);
   input.value = val;
-  checkSubmit(idx);
+  updateCount();
 }
 
-function checkSubmit(idx) {
-  const val = parseInt(document.getElementById(`val-${idx}`).value) || 0;
-  const btn = document.getElementById(`btn-${idx}`);
-  if (val > 0 && !submittedIds.has(idx)) {
-    btn.className = 'submit-btn ready';
-    btn.disabled = false;
-  } else {
-    btn.disabled = true;
-  }
+function updateCount() {
+  let total = 0;
+  menuItems.forEach((_, idx) => {
+    const val = parseInt(document.getElementById(`val-${idx}`).value) || 0;
+    if (val > 0) total++;
+  });
+  document.getElementById('itemCount').textContent = `已选 ${total} 项`;
+  document.getElementById('submitBtn').disabled = total === 0;
 }
 
-async function submitOne(idx) {
-  const val = parseInt(document.getElementById(`val-${idx}`).value) || 0;
-  if (val <= 0) return;
-
-  const btn = document.getElementById(`btn-${idx}`);
+async function submitAll() {
+  const btn = document.getElementById('submitBtn');
   btn.disabled = true;
-  btn.textContent = '...';
+  btn.textContent = '提交中...';
 
   const storeId = parseInt(document.getElementById('storeSelect').value);
-  const slotLabel = document.getElementById('slotSelect').value;
-  const item = menuItems[idx];
+  const slotLabel = document.getElementById('slotLabel').textContent;
+  const items = [];
 
-  try {
-    const r = await fetch('/api/report', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        store_id: storeId,
-        slot_label: slotLabel,
-        items: [{ name: item.name, unit: '份', value: val }]
-      }),
-    });
-    const result = await r.json();
-    if (r.ok && result.success) {
-      btn.className = 'submit-btn done';
-      btn.textContent = '✅';
-      submittedIds.add(idx);
-      
-      const box = document.getElementById('resultBox');
-      box.textContent = result.raw_text;
-      box.style.display = 'block';
-      showToast('✅ 已提交', 'success');
-    } else if (r.status === 409) {
-      showToast('⚠️ 该时段已上报过', 'warning');
-      btn.className = 'submit-btn done';
-      btn.textContent = '✅';
-      submittedIds.add(idx);
-    } else {
-      showToast('❌ ' + (result.detail || '提交失败'), 'error');
-      btn.disabled = false;
-      btn.textContent = '提交';
+  menuItems.forEach((item, idx) => {
+    const val = parseInt(document.getElementById(`val-${idx}`).value) || 0;
+    if (val > 0) {
+      items.push({ name: item.name, unit: '份', value: val });
     }
-  } catch(e) {
-    showToast('❌ 网络错误', 'error');
-    btn.disabled = false;
-    btn.textContent = '提交';
+  });
+
+  if (items.length === 0) {
+    showToast('请先选择数量', 'warning');
+    btn.disabled = false; btn.textContent = '提交';
+    return;
   }
+
+  // 逐个提交
+  let success = 0, failed = 0;
+  for (const item of items) {
+    try {
+      const r = await fetch('/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ store_id: storeId, slot_label: slotLabel, items: [item] }),
+      });
+      const result = await r.json();
+      if (r.ok && result.success) {
+        success++;
+        // 显示最终消息文案
+        document.getElementById('resultBox')?.remove();
+        const box = document.createElement('div');
+        box.className = 'result-box';
+        box.id = 'resultBox';
+        box.textContent = result.raw_text;
+        document.getElementById('menuContainer').after(box);
+        box.style.display = 'block';
+      } else {
+        failed++;
+      }
+    } catch(e) {
+      failed++;
+    }
+  }
+
+  if (failed === 0) {
+    showToast(`✅ 已提交 ${success} 项`, 'success');
+    // 重置
+    menuItems.forEach((_, idx) => {
+      document.getElementById(`val-${idx}`).value = 0;
+    });
+    updateCount();
+  } else {
+    showToast(`⚠️ 成功 ${success} 项，失败 ${failed} 项`, 'warning');
+  }
+  btn.disabled = false; btn.textContent = '提交';
 }
 
 function showToast(msg, type) {

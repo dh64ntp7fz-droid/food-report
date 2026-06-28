@@ -181,18 +181,6 @@ def submit_report(data: dict):
     if not store_id or not slot_label or not items:
         raise HTTPException(400, "缺少必填字段")
 
-    # 检查该时段是否已提交
-    today = date.today().isoformat()
-    en_slot = get_en_slot_from_label(slot_label)
-    existing = api_get("food_reports", {
-        "store_id": f"eq.{store_id}",
-        "time_slot": f"eq.{en_slot}",
-        "report_date": f"eq.{today}",
-        "select": "id",
-    })
-    if existing:
-        raise HTTPException(409, f"今日{slot_label}时段已上报，不能重复提交")
-
     # 查询门店名称
     stores = api_get("food_stores", {"id": f"eq.{store_id}", "select": "name"})
     store_name = stores[0]["name"] if stores else data.get("store_name", "")
