@@ -121,12 +121,7 @@ input:focus { border-color: #E65C1E; }
   <div class="panel active" id="panel-menu">
     <div class="card">
       <h3>菜品管理</h3>
-      <div style="margin-bottom:12px">
-        <select id="menuStoreFilter" onchange="renderMenuAdmin(parseInt(this.value))">
-          <option value="">请选择门店 · 管理推荐菜品库</option>
-        </select>
-      </div>
-      <div id="menuAdmin"><p style="color:#999;padding:16px">请先选择门店</p></div>
+      <div id="menuAdmin"></div>
     </div>
   </div>
 
@@ -200,15 +195,6 @@ async function loadStores() {
     const opt = document.createElement('option');
     opt.value = s.id; opt.textContent = s.name; filterSel.appendChild(opt);
   });
-  // 菜品管理门店下拉
-  const menuSel = document.getElementById('menuStoreFilter');
-  if (menuSel) {
-    menuSel.innerHTML = '<option value="">请选择门店 · 管理推荐菜品库</option>';
-    stores.forEach(s => {
-      const opt = document.createElement('option');
-      opt.value = s.id; opt.textContent = s.name; menuSel.appendChild(opt);
-    });
-  }
 }
 
 function switchTab(name) {
@@ -219,35 +205,35 @@ function switchTab(name) {
 }
 
 // ═══ 菜品管理 ═══
-function renderMenuAdmin(storeId) {
+function renderMenuAdmin() {
   const container = document.getElementById('menuAdmin');
-  if (!storeId) { container.innerHTML = '<p style="color:#999;padding:16px">请先选择门店</p>'; return; }
-  const s = stores.find(x => x.id === storeId);
-  if (!s) return;
-  const items = menuItems[s.id] || [];
   let html = '';
-  html += `<div style="margin-bottom:8px"><strong style="font-size:15px">${s.name}</strong></div>`;
-  html += `<table><tr><th style="width:50%">菜品</th><th style="width:30%">单位</th><th style="width:20%">操作</th></tr>`;
-  items.forEach((item) => {
-    html += `<tr>
-      <td><input type="text" value="${escHtml(item.name)}" id="mn_${s.id}_${item.id}_name" style="width:95%"></td>
-      <td><input type="text" value="${escHtml(item.unit)}" id="mn_${s.id}_${item.id}_unit" style="width:80px"></td>
-      <td style="display:flex;gap:12px">
-        <button class="btn btn-sm btn-primary" onclick="saveMenuItem(${s.id},${item.id})">保存</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteMenuItem(${s.id},${item.id})">删除</button>
-      </td>
-    </tr>`;
+  stores.forEach(s => {
+    const items = menuItems[s.id] || [];
+    html += `<details style="margin-bottom:10px;border:1.5px solid #E0D5CC;border-radius:10px;overflow:hidden">`;
+    html += `<summary style="padding:12px 16px;background:#FAF0EA;cursor:pointer;font-size:15px;font-weight:600;color:#D45500">📋 ${s.name} <span style="color:#999;font-weight:400;font-size:12px">（${items.length} 项）</span></summary>`;
+    html += `<div style="padding:12px 16px">`;
+    html += `<table><tr><th style="width:50%">菜品</th><th style="width:30%">单位</th><th style="width:20%">操作</th></tr>`;
+    items.forEach((item) => {
+      html += `<tr>
+        <td><input type="text" value="${escHtml(item.name)}" id="mn_${s.id}_${item.id}_name" style="width:95%"></td>
+        <td><input type="text" value="${escHtml(item.unit)}" id="mn_${s.id}_${item.id}_unit" style="width:80px"></td>
+        <td style="display:flex;gap:12px">
+          <button class="btn btn-sm btn-primary" onclick="saveMenuItem(${s.id},${item.id})">保存</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteMenuItem(${s.id},${item.id})">删除</button>
+        </td>
+      </tr>`;
+    });
+    html += `</table>`;
+    html += `<div class="form-row" style="margin-top:12px">
+      <input type="text" id="newName_${s.id}" placeholder="菜品名" style="width:200px">
+      <input type="text" id="newUnit_${s.id}" placeholder="单位" style="width:80px">
+      <button class="btn btn-sm btn-outline" onclick="addMenuItem(${s.id})">+ 新增</button>
+    </div>`;
+    html += `</div></details>`;
   });
-  html += `</table>`;
-  html += `<div class="form-row" style="margin-top:12px">
-    <input type="text" id="newName_${s.id}" placeholder="菜品名" style="width:200px">
-    <input type="text" id="newUnit_${s.id}" placeholder="单位" style="width:80px">
-    <button class="btn btn-sm btn-outline" onclick="addMenuItem(${s.id})">+ 新增</button>
-  </div>`;
   container.innerHTML = html;
 }
-
-function selectedStoreId() { const v = document.getElementById('menuStoreFilter').value; return v ? parseInt(v) : 0; }
 
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -260,14 +246,14 @@ async function saveMenuItem(storeId, itemId) {
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({name, unit})
   });
-  if (r.ok) { showToast('✅ 已保存', 'success'); await loadStores(); renderMenuAdmin(selectedStoreId()); }
+  if (r.ok) { showToast('✅ 已保存', 'success'); await loadStores(); renderMenuAdmin(); }
   else showToast('❌ 保存失败', 'error');
 }
 
 async function deleteMenuItem(storeId, itemId) {
   if (!confirm('确认删除该菜品？')) return;
   const r = await fetch(`/api/menu/${itemId}`, { method: 'DELETE' });
-  if (r.ok) { showToast('✅ 已删除', 'success'); await loadStores(); renderMenuAdmin(selectedStoreId()); }
+  if (r.ok) { showToast('✅ 已删除', 'success'); await loadStores(); renderMenuAdmin(); }
   else showToast('❌ 删除失败', 'error');
 }
 
@@ -284,7 +270,7 @@ async function addMenuItem(storeId) {
     showToast('✅ 已添加', 'success');
     document.getElementById(`newName_${storeId}`).value = '';
     document.getElementById(`newUnit_${storeId}`).value = '';
-    await loadStores(); renderMenuAdmin(selectedStoreId());
+    await loadStores(); renderMenuAdmin();
   } else showToast('❌ 添加失败', 'error');
 }
 
