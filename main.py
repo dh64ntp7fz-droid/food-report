@@ -143,7 +143,6 @@ def push_webhook(url: str, content: str) -> bool:
             "msgtype": "text",
             "text": {
                 "content": content,
-                "mentioned_list": ["@all"],
             },
         }
         r = requests.post(url, json=payload, timeout=8)
