@@ -7,7 +7,7 @@ import json
 import asyncio
 import logging
 import time
-from datetime import datetime, date, time as dtime
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 import requests
@@ -20,6 +20,9 @@ from pydantic import BaseModel
 # ─── 日志 ───
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("food-report")
+
+# 东八区
+CST = timezone(timedelta(hours=8))
 
 # ─── 配置 ───
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://ieidvazvzulsrfopjvyf.supabase.co")
@@ -160,7 +163,7 @@ def build_report_text(store_name: str, slot_label: str, items: list) -> str:
     lines = [f"【湘阁里辣 · 新鲜食材 · 今日推荐】"]
     for item in items:
         lines.append(f"{item['name']}：{item['value']}份")
-    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    now = datetime.now(CST).strftime("%Y-%m-%d %H:%M")
     lines.append(f"上报时间：{now}")
     lines.append(f" @所有人")
     return "\n".join(lines)
@@ -168,7 +171,7 @@ def build_report_text(store_name: str, slot_label: str, items: list) -> str:
 
 def get_cn_slot() -> str:
     """获取当前时段中文标签"""
-    h = datetime.now().hour
+    h = datetime.now(CST).hour
     if h < 13:
         return "早10:00"
     return "晚17:00"
@@ -241,7 +244,7 @@ def submit_report(data: dict):
     stores = api_get("food_stores", {"id": f"eq.{store_id}", "select": "name"})
     store_name = stores[0]["name"] if stores else data.get("store_name", "")
 
-    today = date.today().isoformat()
+    today = datetime.now(CST).strftime("%Y-%m-%d")
     en_slot = get_en_slot_from_label(slot_label)
 
     # 生成文案
@@ -433,8 +436,8 @@ CHECK_TIMES = [
 async def check_missed_reports():
     """检查是否有门店漏报"""
     try:
-        today = date.today().isoformat()
-        now = datetime.now()
+        today = datetime.now(CST).strftime("%Y-%m-%d")
+        now = datetime.now(CST)
         current_minutes = now.hour * 60 + now.minute
 
         for check_h, check_m, slot_label, en_slot in CHECK_TIMES:
