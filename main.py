@@ -433,8 +433,11 @@ CHECK_TIMES = [
 ]
 
 
-async def check_missed_reports():
-    """检查是否有门店漏报"""
+async def check_missed_reports(catchup: bool = False):
+    """检查是否有门店漏报
+    Args:
+        catchup: 是否开机补查模式（检查今天所有已过时段）
+    """
     try:
         today = datetime.now(CST).strftime("%Y-%m-%d")
         now = datetime.now(CST)
@@ -442,10 +445,16 @@ async def check_missed_reports():
 
         for check_h, check_m, slot_label, en_slot in CHECK_TIMES:
             check_minutes = check_h * 60 + check_m
-            if current_minutes != check_minutes:
-                continue
+            if not catchup:
+                # 普通模式：只检查当前精确分钟
+                if current_minutes != check_minutes:
+                    continue
+            else:
+                # 补查模式：检查所有已过时段（含5分钟宽限）
+                if current_minutes < check_minutes - 5:
+                    continue
 
-            log.info(f"🔍 检查漏报: {slot_label}")
+            log.info(f"🔍 检查漏报: {slot_label}" + (" (启动补查)" if catchup else ""))
 
             # 获取所有门店
             stores = api_get("food_stores", {"order": "sort_order.asc"})
@@ -505,7 +514,19 @@ async def startup():
     log.info(f"🚀 食材上报系统启动")
     log.info(f"📦 Supabase: {SUPABASE_URL}")
     log.info(f"📋 环境: {'Render' if IS_RENDER else '本地'}")
+
+    # 启动定时循环
     asyncio.create_task(scheduler_loop())
+
+    # 🔥 开机立即补查：检查今天所有已过时段的漏报
+    # （解决 Free 计划休眠导致错过整点检查的问题）
+    await asyncio.sleep(3)  # 等数据库连接稳定
+    try:
+        now = datetime.now(CST)
+        log.info(f"🔍 启动补查: 当前时间 {now.hour:02d}:{now.minute:02d}")
+        await check_missed_reports(catchup=True)
+    except Exception as e:
+        log.error(f"启动补查异常: {e}")
 
 
 # ══════════════════════════════════════════════════════════
