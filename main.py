@@ -432,11 +432,14 @@ CHECK_TIMES = [
     (17, 5, "晚17:00", "noon"),      # 17:05 检查晚17点
 ]
 
+# 漏报检查完成标记：{date_slot: timestamp}，防止重复推送
+_done_checks = {}
+
 
 async def check_missed_reports(catchup: bool = False):
     """检查是否有门店漏报
     Args:
-        catchup: 是否开机补查模式（检查今天所有已过时段）
+        catchup: 是否补查模式（检查今天所有已过时段，用于开机、补跑等场景）
     """
     try:
         today = datetime.now(CST).strftime("%Y-%m-%d")
@@ -446,13 +449,19 @@ async def check_missed_reports(catchup: bool = False):
         for check_h, check_m, slot_label, en_slot in CHECK_TIMES:
             check_minutes = check_h * 60 + check_m
             if not catchup:
-                # 普通模式：只检查当前精确分钟
-                if current_minutes != check_minutes:
+                # 普通模式：窗口期 10:05~10:20 / 17:05~17:20，防分钟抖动错过
+                if not (check_minutes <= current_minutes < check_minutes + 15):
                     continue
             else:
-                # 补查模式：检查所有已过时段（含5分钟宽限）
-                if current_minutes < check_minutes - 5:
+                # 补查模式：跳过未来时段（含15分钟宽限，给提交时间）
+                if current_minutes < check_minutes + 15:
                     continue
+
+            # 每个时段全天只推送一次（标记记录到缓存，下次启动重置）
+            check_key = f"{today}_{en_slot}"
+            if check_key in _done_checks:
+                log.info(f"  {slot_label} 今日已完成，跳过")
+                continue
 
             log.info(f"🔍 检查漏报: {slot_label}" + (" (启动补查)" if catchup else ""))
 
@@ -494,6 +503,10 @@ async def check_missed_reports(catchup: bool = False):
                         push_webhook(wh_url, msg)
                         log.info(f"  推漏报告警: {store['name']} {slot_label}")
 
+            # 标记该时段检查已完成
+            _done_checks[check_key] = time.time()
+            log.info(f"✅ {slot_label} 漏报检查完成" + (" (补查)" if catchup else ""))
+
     except Exception as e:
         log.error(f"漏报检查异常: {e}")
 
@@ -517,6 +530,16 @@ async def startup():
 
     # 启动定时循环
     asyncio.create_task(scheduler_loop())
+
+    # 开机立即补查今日漏报（防止错过10:05/17:05检查窗口）
+    asyncio.create_task(_startup_catchup())
+
+
+async def _startup_catchup():
+    """开机后稍等片刻再补查，确保依赖服务就绪"""
+    await asyncio.sleep(5)
+    log.info("🔄 开机补查今日漏报")
+    await check_missed_reports(catchup=True)
 
     # 🔥 开机立即补查：检查今天所有已过时段的漏报
     # （解决 Free 计划休眠导致错过整点检查的问题）
