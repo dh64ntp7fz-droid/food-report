@@ -50,7 +50,10 @@ def verify_secret(request_body: dict = None, headers: dict = None):
         code = headers["x-secret"]
     return code == SECRET_CODE
 
-# ─── 缓存 ───
+# ─── 测试用 Webhook（仅用于测试，不可发门店群）───
+TEST_WEBHOOK_URL = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=d35ec9fd-b3e2-4132-848c-0fbc7ab38107"
+# 测试模式开关：设为 True 时所有推送走测试号，不触达门店群
+TEST_MODE = os.environ.get("FOOD_REPORT_TEST_MODE", "").lower() in ("true", "1", "yes")
 cache = {}
 CACHE_TTL = 60  # 秒
 
@@ -158,9 +161,21 @@ def push_webhook(url: str, content: str) -> bool:
         return False
 
 
+def get_time_period_label() -> str:
+    """根据当前时间返回时段标签：上午/下午/晚上"""
+    h = datetime.now(CST).hour
+    if h < 12:
+        return "上午"
+    elif h < 16:
+        return "下午"
+    else:
+        return "晚上"
+
+
 def build_report_text(store_name: str, slot_label: str, items: list) -> str:
     """生成标准上报文案"""
-    lines = [f"【湘阁里辣今日鲜菜剩余·楼面重点急推】"]
+    period = get_time_period_label()
+    lines = [f"【{period}鲜菜剩余·楼面重点急推】"]
     for item in items:
         lines.append(f"{item['name']}：{item['value']} 份")
     now = datetime.now(CST).strftime("%Y-%m-%d %H:%M")
@@ -270,6 +285,10 @@ def submit_report(data: dict):
     # 推送 Webhook
     webhooks = api_get("food_webhook_config", {"store_id": f"eq.{store_id}"})
     webhook_url = webhooks[0].get("webhook_url", "") if webhooks else ""
+    # 🔒 测试模式：所有推送走测试号，不触达门店群
+    if TEST_MODE:
+        webhook_url = TEST_WEBHOOK_URL
+        log.info(f"🧪 测试模式: 推送至测试号而非 {webhook_url[:30]}...")
     push_ok = push_webhook(webhook_url, raw_text)
 
     # 更新推送状态
