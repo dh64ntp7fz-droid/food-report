@@ -418,6 +418,16 @@ def delete_menu_item(item_id: int):
     return {"success": True}
 
 
+@app.post("/api/admin/delete-report")
+def delete_report(data: dict):
+    """删除指定ID的上报记录（仅测试用）"""
+    report_id = data.get("id")
+    if not report_id:
+        raise HTTPException(400, "缺少 id")
+    api_delete("food_reports", f"id=eq.{report_id}")
+    return {"success": True, "deleted_id": report_id}
+
+
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "food-report"}
