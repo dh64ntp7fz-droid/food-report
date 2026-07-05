@@ -160,12 +160,12 @@ def push_webhook(url: str, content: str) -> bool:
 
 def build_report_text(store_name: str, slot_label: str, items: list) -> str:
     """生成标准上报文案"""
-    lines = [f"【湘阁里辣 · 新鲜食材 · 今日推荐】"]
+    lines = [f"【湘阁里辣今日鲜菜剩余·楼面重点急推】"]
     for item in items:
-        lines.append(f"{item['name']}：{item['value']}份")
+        lines.append(f"{item['name']}：{item['value']} 份")
     now = datetime.now(CST).strftime("%Y-%m-%d %H:%M")
     lines.append(f"上报时间：{now}")
-    lines.append(f" @所有人")
+    lines.append(f"@所有人 接待客人优先推荐以上菜品")
     return "\n".join(lines)
 
 
@@ -538,15 +538,9 @@ async def startup():
 async def _startup_catchup():
     """开机后稍等片刻再补查，确保依赖服务就绪"""
     await asyncio.sleep(5)
-    log.info("🔄 开机补查今日漏报")
-    await check_missed_reports(catchup=True)
-
-    # 🔥 开机立即补查：检查今天所有已过时段的漏报
-    # （解决 Free 计划休眠导致错过整点检查的问题）
-    await asyncio.sleep(3)  # 等数据库连接稳定
+    now = datetime.now(CST)
+    log.info(f"🔄 开机补查今日漏报（当前 {now.hour:02d}:{now.minute:02d}）")
     try:
-        now = datetime.now(CST)
-        log.info(f"🔍 启动补查: 当前时间 {now.hour:02d}:{now.minute:02d}")
         await check_missed_reports(catchup=True)
     except Exception as e:
         log.error(f"启动补查异常: {e}")
