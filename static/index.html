@@ -146,7 +146,7 @@ async function loadMenu() {
       const card = document.createElement('div');
       card.className = 'card';
       card.innerHTML = `
-        <span class="item-name">${item.name}</span>
+        <span class="item-name">${item.name} <small style="color:#999;font-size:12px">${item.unit || '份'}</small></span>
         <div class="qty-control">
           <button onclick="changeQty(${idx}, -1)">−</button>
           <input type="number" id="val-${idx}" min="0" value="0" onchange="updateCount()">
@@ -193,7 +193,7 @@ async function submitAll() {
   menuItems.forEach((item, idx) => {
     const val = parseInt(document.getElementById(`val-${idx}`).value) || 0;
     if (val > 0) {
-      items.push({ name: item.name, unit: '份', value: val });
+      items.push({ name: item.name, unit: item.unit || '份', value: val });
     }
   });
 

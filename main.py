@@ -177,7 +177,8 @@ def build_report_text(store_name: str, slot_label: str, items: list) -> str:
     period = get_time_period_label()
     lines = [f"【{period}鲜菜剩余·楼面重点急推】"]
     for item in items:
-        lines.append(f"{item['name']}：{item['value']} 份")
+        unit = item.get('unit', '份')
+        lines.append(f"{item['name']}：{item['value']} {unit}")
     now = datetime.now(CST).strftime("%Y-%m-%d %H:%M")
     lines.append(f"上报时间：{now}")
     lines.append(f"@所有人 接待客人优先推荐以上菜品")
