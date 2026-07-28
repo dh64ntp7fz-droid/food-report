@@ -548,6 +548,11 @@ async def startup():
     log.info(f"📦 Supabase: {SUPABASE_URL}")
     log.info(f"📋 环境: {'Render' if IS_RENDER else '本地'}")
 
+    # Render 版已退役，改用腾讯云版
+    if IS_RENDER:
+        log.info("⏹️  Render 版本已停用，调度器已关闭")
+        return
+
     # 启动定时循环
     asyncio.create_task(scheduler_loop())
 
