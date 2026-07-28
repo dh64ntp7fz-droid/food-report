@@ -1,3 +1,12 @@
+
+import os
+# Render 版已退役 - 服务已迁移到腾讯云
+# 此文件用于让 Render 停止运行，不再推送消息
+if os.environ.get('RENDER', False):
+    import sys
+    print('Render 版已退役，退出')
+    sys.exit(0)
+
 """
 门店临期食材每日上报系统
 FastAPI + Supabase 后端
