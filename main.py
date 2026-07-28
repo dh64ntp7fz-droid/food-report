@@ -3,9 +3,14 @@ import os
 # Render 版已退役 - 服务已迁移到腾讯云
 # 此文件用于让 Render 停止运行，不再推送消息
 if os.environ.get('RENDER', False):
-    import sys
-    print('Render 版已退役，退出')
-    sys.exit(0)
+    # Render 版已退役 - 服务已迁移到腾讯云
+    # 保持进程存活但不做任何事
+    import time
+    try:
+        while True:
+            time.sleep(3600)
+    except KeyboardInterrupt:
+        pass
 
 """
 门店临期食材每日上报系统
