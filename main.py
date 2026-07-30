@@ -156,6 +156,8 @@ def api_delete(table: str, query: str):
 
 def push_webhook(url: str, content: str) -> bool:
     """推送消息到企微群机器人（含@所有人）"""
+    if os.environ.get("RENDER"):
+        return False
     if not url:
         return False
     try:
